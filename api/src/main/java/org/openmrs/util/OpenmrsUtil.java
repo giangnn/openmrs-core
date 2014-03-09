@@ -1231,19 +1231,9 @@ public class OpenmrsUtil {
 			} else {
 				if (OpenmrsConstants.UNIX_BASED_OPERATING_SYSTEM) {
 					filepath = System.getProperty("user.home") + File.separator + ".OpenMRS";
-					if (!(new File(filepath)).canWrite()) {
-						log.warn("Unable to write to users home dir, fallback to: "
-						        + OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_UNIX);
-						filepath = OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_UNIX + File.separator + "OpenMRS";
-					}
 				} else {
 					filepath = System.getProperty("user.home") + File.separator + "Application Data" + File.separator
 					        + "OpenMRS";
-					if (!(new File(filepath)).canWrite()) {
-						log.warn("Unable to write to users home dir, fallback to: "
-						        + OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_WIN);
-						filepath = OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_WIN + File.separator + "OpenMRS";
-					}
 				}
 				
 				filepath = filepath + File.separator;
@@ -1252,7 +1242,23 @@ public class OpenmrsUtil {
 		
 		File folder = new File(filepath);
 		if (!folder.exists()) {
-			folder.mkdirs();
+			try {
+				folder.mkdirs();
+			}
+			catch (SecurityException se) {
+				// fix TRUNK-4320
+				if (OpenmrsConstants.UNIX_BASED_OPERATING_SYSTEM) {
+					log.warn("Unable to write to users home dir, fallback to: "
+					        + OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_UNIX);
+					filepath = OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_UNIX + File.separator + "OpenMRS"
+					        + File.separator;
+				} else {
+					log.warn("Unable to write to users home dir, fallback to: "
+					        + OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_WIN);
+					filepath = OpenmrsConstants.APPLICATION_DATA_DIRECTORY_FALLBACK_WIN + File.separator + "OpenMRS"
+					        + File.separator;
+				}
+			}
 		}
 		
 		return filepath;
